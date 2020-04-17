@@ -1,0 +1,1 @@
+INSERT INTO loft.price (datetime, price, lat, lon) VALUES

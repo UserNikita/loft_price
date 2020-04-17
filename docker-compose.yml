@@ -1,0 +1,23 @@
+version: '3.7'
+
+services:
+  clickhouse:
+    container_name: clickhouse
+    image: yandex/clickhouse-server
+    ports:
+      - 8123:8123
+      - 9000:9000
+#    volumes:
+#      - ./data/clickhouse:/var/lib/clickhouse
+  web:
+    container_name: web
+    build:
+      context: .
+    ports:
+      - 5000:5000
+    volumes:
+      - .:/app
+    environment:
+      - FLASK_DEBUG=1
+    depends_on:
+      - clickhouse

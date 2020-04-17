@@ -1,0 +1,229 @@
+<html lang="en">
+<head>
+    <title>LOFT PRICE</title>
+    <script src="{{ url_for('static', filename='js/h3-js.umd.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/deck.gl.7.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/mapbox-gl.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/jquery-3.2.1.slim.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mapbox-gl.css') }}">
+    <style>
+        body {
+            width: 100vw;
+            height: 100vh;
+            margin: 0;
+        }
+
+        #control-panel {
+            position: absolute;
+            top: 0;
+            left: 0;
+            margin: 12px;
+            padding: 20px;
+            max-width: 200px;
+            z-index: 1;
+            background: #fff;
+            box-shadow: 0 0 4px rgba(0, 0, 0, 0.15);
+        }
+
+        #tooltip:empty {
+            display: none;
+        }
+
+        #tooltip {
+            font-family: Helvetica, Arial, sans-serif;
+            position: absolute;
+            padding: 4px;
+            margin: 8px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            max-width: 300px;
+            font-size: 10px;
+            z-index: 9;
+            pointer-events: none;
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+<div id="control-panel">
+    <h4>LOFT PRICE</h4>
+    <div class="form-group">
+        <label>Город</label>
+        <div class="custom-control custom-radio">
+            <input id="moscow" type="radio" class="custom-control-input" name="city"
+                   data-lat="55.755826" data-lon="37.6172999">
+            <label for="moscow" class="custom-control-label">Москва</label>
+        </div>
+        <div class="custom-control custom-radio">
+            <input id="tver" type="radio" class="custom-control-input" name="city"
+                   data-lat="56.8587214" data-lon="35.9175965">
+            <label for="tver" class="custom-control-label">Тверь</label>
+        </div>
+        <div class="custom-control custom-radio">
+            <input id="ulyanovsk" type="radio" class="custom-control-input" name="city"
+                   data-lat="54.312416" data-lon="48.395622" checked>
+            <label for="ulyanovsk" class="custom-control-label">Ульяновск</label>
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="resolution">Разрешение индекса H3</label>
+        <select id="resolution" class="custom-select">
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9" selected>9</option>
+            <option value="10">10</option>
+            <option value="11">11</option>
+            <option value="12">12</option>
+            <option value="13">13</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="color_scheme">Цветовая схема</label>
+        <select id="color_scheme" class="custom-select">
+            <option value="blue">BLUE</option>
+            <option value="pink">PINK</option>
+            <option value="red">RED</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label>
+            Прозрачность
+            <input id="opacity" type="range" min="0.1" max="1" step="0.1" value="0.9">
+        </label>
+    </div>
+    <div class="form-group">
+        <button id="pitch" class="btn btn-primary">3D</button>
+    </div>
+    <div class="form-group">
+        <button id="show" class="btn btn-primary">Показать</button>
+    </div>
+</div>
+<div id="tooltip"></div>
+</body>
+
+<script>
+    const {DeckGL, H3HexagonLayer, FlyToInterpolator} = deck;
+
+    const INITIAL_VIEW_STATE = {
+        // Изначально показываем Ульяновска
+        longitude: 48.395622,
+        latitude: 54.312416,
+        zoom: 11,
+        minZoom: 2,
+        maxZoom: 15,
+        pitch: 0
+    };
+    let currentViewState = INITIAL_VIEW_STATE;
+    let extruded = false;
+    let opacity = 0.8;
+    let data;
+
+    let deckgl = new DeckGL({
+        mapboxApiAccessToken: 'pk.eyJ1Ijoic3RlcGFua3V6bWluIiwiYSI6Ik1ieW5udm8ifQ.25EOEC2-N92NCWT0Ci9w-Q',
+        mapStyle: 'mapbox://styles/mapbox/light-v9',
+        initialViewState: INITIAL_VIEW_STATE,
+        onViewStateChange: ({viewState}) => {
+            currentViewState = Object.assign({}, viewState);
+        },
+    });
+
+    function drawLayer() {
+        const layer = new H3HexagonLayer({
+            id: 'hexagon',
+            data,
+            opacity: opacity,
+            filled: true,
+            highPrecision: true,
+            extruded: extruded,
+            radius: 200,
+            coverage: 1,
+            getHexagon: d => d.h3,
+            getFillColor: d => d.color,
+            getElevation: d => d.avg_price / 50,
+            pickable: true,
+            onHover: updateTooltip,
+            onClick: showDetail,
+        });
+        deckgl.setProps({
+            layers: [layer]
+        });
+    }
+
+    function updateTooltip(element) {
+        const tooltip = document.getElementById('tooltip');
+        if (element.object) {
+            tooltip.style.top = `${element.y}px`;
+            tooltip.style.left = `${element.x}px`;
+            tooltip.innerText = `${element.object.avg_price} руб\nCount: ${element.object.count}`;
+        } else {
+            tooltip.innerText = '';
+        }
+    }
+
+    function showDetail(element) {
+        let resolution = document.getElementById('resolution').value;
+        let queryParams = `?h3_index=${element.object.h3}&resolution=${resolution}`;
+
+        let xhr = new XMLHttpRequest();
+        xhr.open('GET', '/api/detail/' + queryParams, true);
+        xhr.send();
+
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState !== 4) return;
+            if (xhr.status === 200) {
+                console.log(element);
+                console.log(JSON.parse(xhr.responseText))
+            }
+        }
+    }
+
+    document.getElementById('pitch').onclick = function () {
+        currentViewState.pitch = (currentViewState.pitch === 0) ? 60 : 0;
+        currentViewState.transitionDuration = 200;
+        extruded = currentViewState.pitch !== 0;
+        deckgl.setProps({
+            viewState: currentViewState
+        });
+        drawLayer()
+    };
+
+    document.getElementById('opacity').onchange = function (event) {
+        opacity = event.target.valueAsNumber;
+        drawLayer();
+    };
+
+    document.getElementsByName('city').forEach(function (element) {
+        element.onchange = function (event) {
+            currentViewState.transitionDuration = 1000;
+            currentViewState.zoom = 11;
+            currentViewState.transitionInterpolator = new FlyToInterpolator();
+            currentViewState.latitude = parseFloat(event.target.dataset.lat);
+            currentViewState.longitude = parseFloat(event.target.dataset.lon);
+            deckgl.setProps({
+                viewState: currentViewState
+            });
+        }
+    });
+
+    document.getElementById('show').onclick = function () {
+        let resolution = document.getElementById('resolution').value;
+        let colorScheme = document.getElementById('color_scheme').value;
+        let queryParams = `?resolution=${resolution}&color_scheme=${colorScheme}`;
+
+        let xhr = new XMLHttpRequest();
+        xhr.open('GET', '/api/h3/' + queryParams, true);
+        xhr.send();
+
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState !== 4) return;
+            if (xhr.status === 200) {
+                data = JSON.parse(xhr.responseText);
+                drawLayer();
+            }
+        }
+    };
+</script>
+</html>
