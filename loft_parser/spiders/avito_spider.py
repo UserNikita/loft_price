@@ -8,15 +8,19 @@ class AvitoSpider(scrapy.Spider):
 
     def __init__(self, city='ulyanovsk', rent='month', *args, **kwargs):
         super().__init__(*args, **kwargs)
-        url_part = {'month': 'na_dlitelnyy_srok', 'day': 'posutochno'}[rent]
-        self.url = f'https://avito.ru/{city}/kvartiry/sdam/{url_part}-ASgBAgICAkSSA8gQ8AeSUg'
+        url_part = {
+            'month': 'sdam/na_dlitelnyy_srok-ASgBAgICAkSSA8gQ8AeQUg',
+            'day': 'sdam/posutochno-ASgBAgICAkSSA8gQ8AeSUg',
+            'forever': 'prodam-ASgBAgICAUSSA8YQ',
+        }[rent]
+        self.url = f'https://www.avito.ru/{city}/kvartiry/{url_part}'
 
     def start_requests(self):
         yield scrapy.Request(url=self.url, callback=self.parse_list_page)
 
     def parse_list_page(self, response):
         # Перебираем все ссылки на страницы с описанием квартиры
-        links_xpath = '//div[contains(@class,"snippet-horizontal")]//h3/a[contains(@class, "snippet-link")]'
+        links_xpath = '//a[contains(@itemprop, "url") and h3]'
         for link in response.xpath(links_xpath):
             url = response.urljoin(link.xpath('./@href').get())
             yield scrapy.Request(url=url, callback=self.parse_detail_page)
