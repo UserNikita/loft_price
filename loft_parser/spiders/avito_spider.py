@@ -1,6 +1,6 @@
 import scrapy
 from scrapy.loader import ItemLoader
-from loft_parser.items import *
+from loft_parser.items import LoftItem, ParamItem, CoordinateItem
 
 
 class AvitoSpider(scrapy.Spider):
@@ -19,11 +19,12 @@ class AvitoSpider(scrapy.Spider):
         yield scrapy.Request(url=self.url, callback=self.parse_list_page)
 
     def parse_list_page(self, response):
+        """Парсинг списка страниц"""
         # Перебираем все ссылки на страницы с описанием квартиры
         links_xpath = '//a[contains(@itemprop, "url") and h3]'
         for link in response.xpath(links_xpath):
             url = response.urljoin(link.xpath('./@href').get())
-            yield scrapy.Request(url=url, callback=self.parse_detail_page)
+            yield scrapy.Request(url=url, callback=self.parse)
 
         is_first_page = response.xpath('//span[contains(@data-marker,"prev") and contains(@class, "readonly")]').get()
         if is_first_page is not None:
@@ -33,7 +34,8 @@ class AvitoSpider(scrapy.Spider):
                 url = response.url + '?p=%d' % page
                 yield response.follow(url=url, callback=self.parse_list_page)
 
-    def parse_detail_page(self, response):
+    def parse(self, response):
+        """Парсинг страницы с детальной информацией о квартире"""
         # Параметры квартиры
         param_items = []
         for param in response.xpath('//li[contains(@class, "item-params-list")]'):
@@ -55,6 +57,7 @@ class AvitoSpider(scrapy.Spider):
         loader.add_xpath('price_period', '//span[contains(@class, "js-item-price")]/../text()')
         loader.add_xpath('seller_name', '//div[contains(@class,"seller-info-name")]/a/text()')
         loader.add_xpath('seller_url', '//div[contains(@class,"seller-info-name")]/a/@href')
+        loader.add_xpath('description', '//div[contains(@class, "item-description-text")]')
         loft_item = loader.load_item()
         loft_item['url'] = response.url
         loft_item['params'] = param_items
