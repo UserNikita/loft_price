@@ -1,9 +1,12 @@
 from flask import Flask, render_template, jsonify, request
+from flask_cors import CORS
 from clickhouse_driver import Client
+import requests
 from . import settings
 from . import color_schemes
 
 app = Flask(__name__)
+cors = CORS(app)
 
 
 def get_color_by_price(price, color_scheme):
@@ -54,6 +57,47 @@ def detail():
     """.format(resolution=h3_resolution)
 
     data = [x for x in client.execute_iter(query=query, params={'h3_index': h3_index})]
+    return jsonify(data)
+
+
+@app.route('/proxy/')
+def proxy_list():
+    https_proxies = [
+        {
+            'id': proxy,
+            'proxy': proxy,
+            'country': '',
+            'elapsed': None,
+        }
+        for i, proxy in enumerate(set(settings.PROXY_LIST.split()))
+    ]
+
+    return jsonify(https_proxies)
+
+
+@app.route('/proxy/check')
+def proxy_check():
+    # url = 'https://api.ipify.org/?format=json'
+    # url = 'https://api.2ip.ua/geo.json'
+    url = 'https://ipwhois.app/json/'
+
+    proxy = request.args.get('proxy')
+
+    try:
+        response = requests.get(url, proxies={'https': proxy})
+        data = {
+            'id': proxy,
+            'proxy': proxy,
+            'country': response.json().get("country", ""),
+            'elapsed': str(response.elapsed),
+        }
+    except:
+        data = {
+            'id': proxy,
+            'proxy': proxy,
+            'country': "",
+            'elapsed': None,
+        }
     return jsonify(data)
 
 

@@ -1,16 +1,16 @@
 version: '3.7'
 
 services:
-  clickhouse:
-    container_name: clickhouse
-    image: yandex/clickhouse-server
-    ports:
-      - 8123:8123
-      - 9000:9000
-#    volumes:
-#      - ./data/clickhouse:/var/lib/clickhouse
-  web:
-    container_name: web
+#  clickhouse:
+#    container_name: clickhouse
+#    image: yandex/clickhouse-server
+#    ports:
+#      - 8123:8123
+#      - 9000:9000
+##    volumes:
+##      - ./data/clickhouse:/var/lib/clickhouse
+  backend:
+    container_name: backend
     build:
       context: .
     ports:
@@ -19,5 +19,38 @@ services:
       - .:/app
     environment:
       - FLASK_DEBUG=1
-    depends_on:
-      - clickhouse
+#    depends_on:
+#      - clickhouse
+
+  frontend:
+    container_name: frontend
+    build:
+      context: frontend
+    expose:
+      - 3000
+    ports:
+      - 3000:3000
+    environment:
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules/
+    stdin_open: true
+
+#  mongo:
+#    container_name: mongo
+#    image: mongo
+#    environment:
+#      MONGO_INITDB_ROOT_USERNAME: root
+#      MONGO_INITDB_ROOT_PASSWORD: 123
+#
+#  mongo-express:
+#    container_name: mongo_express
+#    image: mongo-express:0.54.0
+#    restart: always
+#    ports:
+#      - 8081:8081
+#    environment:
+#      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+#      ME_CONFIG_MONGODB_ADMINPASSWORD: 123
