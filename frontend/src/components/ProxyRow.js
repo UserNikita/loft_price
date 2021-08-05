@@ -29,7 +29,11 @@ export default function ProxyRow(props) {
     return (
         <TableRow>
             <TableCell>{item.id}</TableCell>
-            <TableCell><code>{item.proxy}</code></TableCell>
+            <TableCell>
+                <code style={{color: item.working === true ? "#29ea29" : item.working === false ? "red": "black"}}>
+                    {item.proxy}
+                </code>
+            </TableCell>
             <TableCell>{item.country}</TableCell>
             <TableCell align="right">{item.elapsed}</TableCell>
             <TableCell>

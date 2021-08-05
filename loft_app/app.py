@@ -68,6 +68,7 @@ def proxy_list():
             'proxy': proxy,
             'country': '',
             'elapsed': None,
+            'working': None,
         }
         for i, proxy in enumerate(set(settings.PROXY_LIST.split()))
     ]
@@ -90,6 +91,7 @@ def proxy_check():
             'proxy': proxy,
             'country': response.json().get("country", ""),
             'elapsed': str(response.elapsed),
+            'working': True,
         }
     except:
         data = {
@@ -97,6 +99,7 @@ def proxy_check():
             'proxy': proxy,
             'country': "",
             'elapsed': None,
+            'working': False,
         }
     return jsonify(data)
 
