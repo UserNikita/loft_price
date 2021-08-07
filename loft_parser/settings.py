@@ -15,3 +15,8 @@ FEED_FORMAT = 'json'
 FEED_EXPORT_INDENT = 0
 FEED_EXPORT_ENCODING = 'utf-8'
 FEED_URI = 'storage/%(name)s_%(time)s.json'
+
+DOWNLOADER_MIDDLEWARES = {
+    'loft_parser.middlewares.LoftParserDownloaderMiddleware': 750,
+    'scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware': None,
+}

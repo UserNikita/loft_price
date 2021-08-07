@@ -23,7 +23,7 @@ Web-приложение для визуализации стоимости ар
 Команда для сбора данных
 
 ```bash
-docker exec -ti web scrapy crawl <spider> -a city=<city> -a rent=<rent>
+docker exec -ti backend scrapy crawl <spider> -a city=<city> -a rent=<rent>
 ```
 
 `spider` - паук для сбора данных, доступные значения `avito` и `cian`
