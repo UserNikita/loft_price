@@ -47,6 +47,12 @@ docker-compose exec backend scrapy crawl -a loft_url=<url>
 
 `url` - ссылка на страницу квартиры
 
+### Запуск тестов
+
+```bash
+python -m unittest discover
+```
+
 ### Скриншоты
 ![Screenshot1](./screenshots/screen1.png)
 ![Screenshot2](./screenshots/screen2.png)

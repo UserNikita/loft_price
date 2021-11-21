@@ -9,6 +9,8 @@ def strip(value):
 
 class LoftItem(Item):
     url = Field()
+    city = Field()
+    rent = Field()
 
 
 class LoftDataItem(Item):

@@ -2,35 +2,43 @@ import scrapy
 from loft_parser.items import *
 
 
-class CianSpider(scrapy.Spider):  # TODO Починить
+class CianSpider(scrapy.Spider):
     name = "cian"
 
-    def __init__(self, city='ulyanovsk', rent='month', *args, **kwargs):
+    def __init__(self, loft_url=None, city='ulyanovsk', rent='month', *args, **kwargs):
         super().__init__(*args, **kwargs)
-        url_part = {'month': 'snyat-kvartiru', 'day': 'snyat-kvartiru-posutochno'}[rent]
-        self.url = f'https://{city}.cian.ru/{url_part}/'
+        self.loft_url = loft_url
+
+        if not loft_url:
+            self.city = city
+            self.rent = rent
+            url_part = {'month': 'snyat-kvartiru', 'day': 'snyat-kvartiru-posutochno'}[rent]
+            self.url = f'https://{city}.cian.ru/{url_part}/'
 
     def start_requests(self):
-        page = 1
-        yield scrapy.Request(
-            url=self.url,
-            callback=self.parse_list_page,
-            meta={'page': page}
-        )
+        if self.loft_url:
+            yield scrapy.Request(url=self.loft_url, callback=self.parse_loft)
+        else:
+            page = 1
+            yield scrapy.Request(
+                url=self.url,
+                callback=self.parse_loft_list,
+                meta={'page': page}
+            )
 
-    def parse_list_page(self, response):
+    def parse_loft_list(self, response):
         # Перебираем все ссылки на страницы с описанием квартиры
-        links_xpath = '//a[contains(@href,"rent/flat/") and not(contains(@href, "favorites"))]'
-        for i, link in enumerate(response.xpath(links_xpath)):
+        links_xpath = '//div[@data-name="LinkArea"]/a[1]'
+        for link in response.xpath(links_xpath):
             url = response.urljoin(link.xpath('./@href').get())
-            yield scrapy.Request(url=url, callback=self.parse_detail_page)
+            yield LoftItem(url=url, city=self.city, rent=self.rent)
 
         # Переход к следующей странице
         page = response.meta.get('page') + 1
         next_page = response.xpath(f'//div[@data-name="Pagination"]//ul//a[contains(text(),"{page}")]/@href').get()
-        yield response.follow(url=next_page, callback=self.parse_list_page, meta={'page': page})
+        yield response.follow(url=next_page, callback=self.parse_loft_list, meta={'page': page})
 
-    def parse_detail_page(self, response):
+    def parse_loft(self, response):
         # Параметры квартиры
         param_items = []
         for param in response.xpath('//*[@id="description"]//div[@itemscope]/div'):

@@ -11,6 +11,8 @@ class AvitoSpider(scrapy.Spider):
         self.loft_url = loft_url
 
         if loft_url is None:  # Если не была передана прямая ссылка на страницу с информацией о квартире
+            self.city = city
+            self.rent = rent
             url_part = {
                 'month': 'sdam/na_dlitelnyy_srok-ASgBAgICAkSSA8gQ8AeQUg',
                 'day': 'sdam/posutochno-ASgBAgICAkSSA8gQ8AeSUg',
@@ -29,7 +31,7 @@ class AvitoSpider(scrapy.Spider):
         links_xpath = '//a[contains(@itemprop, "url") and h3]'
         for link in response.xpath(links_xpath):
             url = response.urljoin(link.xpath('./@href').get())
-            yield LoftItem(url=url)
+            yield LoftItem(url=url, city=self.city, rent=self.rent)
 
         first_page = response.xpath('//span[contains(@data-marker,"prev") and contains(@class, "readonly")]').get()
         if first_page is not None:

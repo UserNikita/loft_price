@@ -13,29 +13,29 @@ class MongoPipeline(object):
         db = connection[DB_NAME]
         self.collection = db[COLLECTION_NAME]
 
+    @staticmethod
+    def _create_document(item: LoftItem) -> dict:
+        return {
+            **dict(item),  # Все данные объекта сохраняются как есть
+            "created": datetime.now(),  # Добавление даты создания объекта
+            "data": [],  # Поле в которое сохраняется подробная информация о квартире
+        }
+
     def _add_loft(self, loft_item):
-        if not self.collection.find_one({"_id": loft_item["url"]}):
-            document = {
-                "_id": loft_item["url"],
-                "created": datetime.now(),
-                "data": [],
-            }
-            self.collection.insert_one(document=document)
+        if not self.collection.find_one({"url": loft_item["url"]}):
+            self.collection.insert_one(document=self._create_document(item=loft_item))
 
     def _add_loft_data(self, loft_data_item):
         # Преобразование перед сохранением в бд
         item_data = dict(loft_data_item)
-        del item_data["url"]
+        del item_data["url"]  # Это поле не нужно, так как будет содержаться в верхнем уровне объекта
         item_data["version"] = datetime.now()
 
-        if self.collection.find_one({"_id": loft_data_item["url"]}):
-            self.collection.update_one(filter={"_id": loft_data_item["url"]}, update={"$push": {"data": item_data}})
-        else:
-            document = {
-                "_id": loft_data_item["url"],
-                "created": datetime.now(),
-                "data": [item_data],
-            }
+        if self.collection.find_one({"url": loft_data_item["url"]}):
+            self.collection.update_one(filter={"url": loft_data_item["url"]}, update={"$push": {"data": item_data}})
+        else:  # Если для данных о квартире не нашлось объекта в бд, его можно создать
+            document = self._create_document(item=LoftItem(url=loft_data_item["url"]))
+            document["data"] = [item_data]
             self.collection.insert_one(document=document)
 
     def process_item(self, item, spider):
