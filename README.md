@@ -20,7 +20,11 @@ Web-приложение для визуализации стоимости ар
 
 ### Сбор данных
 
-Команда для сбора данных
+Пауки работают в двух режимах
+1. Сбор ссылок на страницы с описаниями квартир
+2. Сбор информации со страницы конкретной квартиры
+
+**Команда для сбора ссылок на квартиры**
 
 ```bash
 docker exec -ti backend scrapy crawl <spider> -a city=<city> -a rent=<rent>
@@ -34,6 +38,14 @@ docker exec -ti backend scrapy crawl <spider> -a city=<city> -a rent=<rent>
 `rent` - типа аренды. 
 Доступные значения: `day` - посуточно, `month` - на длительный срок, `forever` - покупка (доступно для avito). 
 По умолчанию используется `month`.
+
+**Команда для сбора информации о конкретной квартире**
+
+```bash
+docker-compose exec backend scrapy crawl -a loft_url=<url>
+```
+
+`url` - ссылка на страницу квартиры
 
 ### Скриншоты
 ![Screenshot1](./screenshots/screen1.png)

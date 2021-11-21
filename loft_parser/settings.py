@@ -11,12 +11,17 @@ DOWNLOAD_DELAY = 2
 
 COOKIES_ENABLED = False
 
-FEED_FORMAT = 'json'
-FEED_EXPORT_INDENT = 0
-FEED_EXPORT_ENCODING = 'utf-8'
-FEED_URI = 'storage/%(name)s_%(time)s.json'
+# Раскомментировать для сохранения данных локально в файловой системе
+# FEED_FORMAT = 'json'
+# FEED_EXPORT_INDENT = 0
+# FEED_EXPORT_ENCODING = 'utf-8'
+# FEED_URI = 'storage/%(name)s_%(time)s.json'
 
 DOWNLOADER_MIDDLEWARES = {
-    'loft_parser.middlewares.LoftParserDownloaderMiddleware': 750,
-    'scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware': None,
+    # 'loft_parser.middlewares.LoftParserDownloaderMiddleware': 750,
+    # 'scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware': None,
+}
+
+ITEM_PIPELINES = {
+    'loft_parser.pipelines.MongoPipeline': 300,
 }

@@ -9,6 +9,10 @@ def strip(value):
 
 class LoftItem(Item):
     url = Field()
+
+
+class LoftDataItem(Item):
+    url = Field()
     address = Field(input_processor=MapCompose(strip), output_processor=TakeFirst())
     price = Field(input_processor=MapCompose(int), output_processor=TakeFirst())
     price_period = Field(input_processor=MapCompose(strip), output_processor=TakeFirst())
@@ -30,6 +34,6 @@ class ParamItem(Item):
 
 
 class CianLoftItemLoader(ItemLoader):
-    default_item_class = LoftItem
+    default_item_class = LoftDataItem
     price_in = MapCompose(lambda value: int("".join(value.split()[:-1])))
     price_period_in = MapCompose(lambda value: value.split()[-1])

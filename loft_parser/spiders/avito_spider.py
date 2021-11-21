@@ -1,40 +1,44 @@
 import scrapy
 from scrapy.loader import ItemLoader
-from loft_parser.items import LoftItem, ParamItem, CoordinateItem
+from loft_parser.items import LoftItem, LoftDataItem, ParamItem, CoordinateItem
 
 
 class AvitoSpider(scrapy.Spider):
     name = "avito"
 
-    def __init__(self, city='ulyanovsk', rent='month', *args, **kwargs):
+    def __init__(self, loft_url=None, city='ulyanovsk', rent='month', *args, **kwargs):
         super().__init__(*args, **kwargs)
-        url_part = {
-            'month': 'sdam/na_dlitelnyy_srok-ASgBAgICAkSSA8gQ8AeQUg',
-            'day': 'sdam/posutochno-ASgBAgICAkSSA8gQ8AeSUg',
-            'forever': 'prodam-ASgBAgICAUSSA8YQ',
-        }[rent]
-        self.url = f'https://www.avito.ru/{city}/kvartiry/{url_part}'
+        self.loft_url = loft_url
+
+        if loft_url is None:  # Если не была передана прямая ссылка на страницу с информацией о квартире
+            url_part = {
+                'month': 'sdam/na_dlitelnyy_srok-ASgBAgICAkSSA8gQ8AeQUg',
+                'day': 'sdam/posutochno-ASgBAgICAkSSA8gQ8AeSUg',
+                'forever': 'prodam-ASgBAgICAUSSA8YQ',
+            }[rent]
+            self.url = f'https://www.avito.ru/{city}/kvartiry/{url_part}'
 
     def start_requests(self):
-        yield scrapy.Request(url=self.url, callback=self.parse_list_page)
+        if self.loft_url:
+            yield scrapy.Request(url=self.loft_url, callback=self.parse_loft)
+        else:
+            yield scrapy.Request(url=self.url, callback=self.parse_loft_list)
 
-    def parse_list_page(self, response):
-        """Парсинг списка страниц"""
-        # Перебираем все ссылки на страницы с описанием квартиры
+    def parse_loft_list(self, response):
+        """Парсинг списка ссылок на страницы с детальной информацией о квартирах"""
         links_xpath = '//a[contains(@itemprop, "url") and h3]'
         for link in response.xpath(links_xpath):
             url = response.urljoin(link.xpath('./@href').get())
-            yield scrapy.Request(url=url, callback=self.parse)
+            yield LoftItem(url=url)
 
-        is_first_page = response.xpath('//span[contains(@data-marker,"prev") and contains(@class, "readonly")]').get()
-        if is_first_page is not None:
-            # Если мы находимся на первой странице
+        first_page = response.xpath('//span[contains(@data-marker,"prev") and contains(@class, "readonly")]').get()
+        if first_page is not None:
             page_count = int(response.xpath('//span[contains(@data-marker,"page")]/text()').getall()[-1])
             for page in range(2, page_count + 1):
                 url = response.url + '?p=%d' % page
-                yield response.follow(url=url, callback=self.parse_list_page)
+                yield response.follow(url=url, callback=self.parse_loft_list)
 
-    def parse(self, response):
+    def parse_loft(self, response):
         """Парсинг страницы с детальной информацией о квартире"""
         # Параметры квартиры
         param_items = []
@@ -51,7 +55,7 @@ class AvitoSpider(scrapy.Spider):
         coord_item = loader.load_item()
 
         # Вся информация вместе
-        loader = ItemLoader(item=LoftItem(), response=response)
+        loader = ItemLoader(item=LoftDataItem(), response=response)
         loader.add_xpath('address', '//span[contains(@class, "item-address__string")]/text()')
         loader.add_xpath('price', '//span[contains(@class, "js-item-price")]/@content')
         loader.add_xpath('price_period', '//span[contains(@class, "js-item-price")]/../text()')

@@ -2,7 +2,7 @@ import scrapy
 from loft_parser.items import *
 
 
-class CianSpider(scrapy.Spider):
+class CianSpider(scrapy.Spider):  # TODO Починить
     name = "cian"
 
     def __init__(self, city='ulyanovsk', rent='month', *args, **kwargs):

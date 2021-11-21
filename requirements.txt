@@ -24,6 +24,7 @@ pyasn1-modules==0.2.8
 pycparser==2.20
 PyDispatcher==2.0.5
 PyHamcrest==2.0.2
+pymongo==3.12.1
 pyOpenSSL==19.1.0
 pytz==2019.3
 queuelib==1.5.0
