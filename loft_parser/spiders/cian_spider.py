@@ -43,7 +43,12 @@ class CianSpider(scrapy.Spider):
 
     def parse(self, response):
         # Параметры квартиры
-        param_items = []
+        param_items = [
+            ParamItem(
+                key="Количество комнат",
+                value=response.xpath('//div[@data-name="OfferTitle"]/*/text()').get(),
+            )
+        ]
         # Основные параметры квартиры
         for param in response.xpath('//*[@data-name="ObjectSummaryDescription"]//*[@data-testid="object-summary-description-info"]'):
             loader = ItemLoader(item=ParamItem(), selector=param)
@@ -71,7 +76,7 @@ class CianSpider(scrapy.Spider):
         loader.add_xpath('address', '//*[@data-name="Geo"]/span/@content')
         loader.add_xpath('price', '//span[@itemprop="price"]/@content')
         loader.add_xpath('price_period', '//span[@itemprop="price"]/@content')
-        loader.add_xpath('seller_name', '//*[@data-name="AuthorAsideBrand"]//a[@data-name="LinkWrapper"]/h4/text()')
+        loader.add_xpath('seller_name', '//*[@data-name="AuthorAsideBrand"]//a[@data-name="LinkWrapper"]/*/text()')
         loader.add_xpath('seller_url', '//*[@data-name="AuthorAsideBrand"]//a[@data-name="LinkWrapper"]/@href')
         loader.add_xpath('description', '//p[@itemprop="description"]/text()')
         loft_item = loader.load_item()
