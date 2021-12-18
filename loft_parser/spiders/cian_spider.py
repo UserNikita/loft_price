@@ -11,7 +11,11 @@ class CianSpider(scrapy.Spider):
         if not self.start_urls:
             self.city = city
             self.rent = rent
-            url_part = {'month': 'snyat-kvartiru', 'day': 'snyat-kvartiru-posutochno'}[rent]
+            url_part = {
+                'month': 'snyat-kvartiru',
+                'day': 'snyat-kvartiru-posutochno',
+                'forever': 'kupit-kvartiru',
+            }[rent]
             self.url = f'https://{city}.cian.ru/{url_part}/'
 
     def start_requests(self):
@@ -43,8 +47,8 @@ class CianSpider(scrapy.Spider):
         # Основные параметры квартиры
         for param in response.xpath('//*[@data-name="ObjectSummaryDescription"]//*[@data-testid="object-summary-description-info"]'):
             loader = ItemLoader(item=ParamItem(), selector=param)
-            loader.add_xpath('key', './*[@data-testid="object-summary-description-value"]/text()')
-            loader.add_xpath('value', './*[@data-testid="object-summary-description-title"]/text()')
+            loader.add_xpath('key', './*[@data-testid="object-summary-description-title"]/text()')
+            loader.add_xpath('value', './*[@data-testid="object-summary-description-value"]/text()')
             param_items.append(loader.load_item())
 
         # Параметры заполняемые дополнительно самим автором объявления
