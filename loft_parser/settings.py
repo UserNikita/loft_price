@@ -7,7 +7,7 @@ USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTM
 
 ROBOTSTXT_OBEY = False
 
-DOWNLOAD_DELAY = 2
+DOWNLOAD_DELAY = 3
 
 COOKIES_ENABLED = False
 
@@ -25,3 +25,9 @@ DOWNLOADER_MIDDLEWARES = {
 ITEM_PIPELINES = {
     'loft_parser.pipelines.MongoPipeline': 300,
 }
+
+# Авито часто возвращает 429 при блокировке. Нет смысла пытаться запрашивать страницу в ту же секунду
+RETRY_ENABLED = False
+
+# Часто редиректы ведут на капчу, поэтому нет смысла редиректиться
+REDIRECT_ENABLED = False
