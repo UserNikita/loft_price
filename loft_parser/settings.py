@@ -1,3 +1,5 @@
+import os
+
 BOT_NAME = 'loft_parser'
 
 SPIDER_MODULES = ['loft_parser.spiders']
@@ -16,6 +18,14 @@ COOKIES_ENABLED = False
 # FEED_EXPORT_INDENT = 0
 # FEED_EXPORT_ENCODING = 'utf-8'
 # FEED_URI = 'storage/%(name)s_%(time)s.json'
+
+# Настройки mongodb
+MONGO_HOST = os.getenv("MONGO_HOST", "mongo")
+MONGO_PORT = os.getenv("MONGO_PORT", 27017)
+MONGO_DB = os.getenv("MONGO_DB", "db")
+MONGO_COLLECTION = os.getenv("MONGO_COLLECTION", "loft")
+MONGO_USERNAME = os.getenv("MONGO_USERNAME", "root")
+MONGO_PASSWORD = os.getenv("MONGO_PASSWORD", "123")
 
 DOWNLOADER_MIDDLEWARES = {
     # 'loft_parser.middlewares.LoftParserDownloaderMiddleware': 750,

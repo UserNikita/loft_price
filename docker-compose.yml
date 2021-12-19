@@ -19,6 +19,11 @@ services:
       - .:/app
     environment:
       - FLASK_DEBUG=1
+      - MONGO_HOST=mongo
+      - MONGO_DB=db
+      - MONGO_COLLECTION=loft
+      - MONGO_USERNAME=root
+      - MONGO_PASSWORD=123
 #    depends_on:
 #      - clickhouse
 

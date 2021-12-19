@@ -22,12 +22,12 @@ Web-приложение для визуализации стоимости ар
 
 Пауки работают в двух режимах
 1. Сбор ссылок на страницы с описаниями квартир
-2. Сбор информации со страницы конкретной квартиры
+2. Сбор данных со страниц с информацией о квартирах
 
 **Команда для сбора ссылок на квартиры**
 
 ```bash
-docker exec -ti backend scrapy crawl <spider> -a city=<city> -a rent=<rent>
+docker-compose exec backend scrapy crawl <spider> -a city=<city> -a rent=<rent>
 ```
 
 `spider` - паук для сбора данных, доступные значения `avito` и `cian`
@@ -39,13 +39,14 @@ docker exec -ti backend scrapy crawl <spider> -a city=<city> -a rent=<rent>
 Доступные значения: `day` - посуточно, `month` - на длительный срок, `forever` - покупка (доступно для avito). 
 По умолчанию используется `month`.
 
-**Команда для сбора информации о конкретной квартире**
+**Команда для обновления информации о сохранённых квартирах**
 
 ```bash
-docker-compose exec backend scrapy crawl -a loft_url=<url>
+docker-compose exec backend python refresh.py <portal>
 ```
 
-`url` - ссылка на страницу квартиры
+`portal` - название площадки данные для которой будут обновляться. Возможные варианты `avito` и `cian`
+
 
 ### Запуск тестов
 
