@@ -1,0 +1,6 @@
+aiohttp
+motor
+umongo
+aiohttp-apispec
+aiohttp_cors
+aiohttp-devtools
